@@ -11,14 +11,26 @@ An Electron application with React and TypeScript
 ### Install
 
 ```bash
-$ npm install
+npm install
+# على شبكة شركة (شهادة SSL):
+npm run install:corp
 ```
+
+### Database (أول مرة)
+
+```bash
+npm run db:setup
+```
+
+يُنشئ `local.db` مع الجداول وحساب مدير افتراضي: **admin** / **admin123**
 
 ### Development
 
 ```bash
-$ npm run dev
+npm run dev
 ```
+
+افتح التطبيق → اختر **مدير** أو **موظف** → سجّل الدخول.
 
 ### Build
 

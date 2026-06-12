@@ -1,12 +1,13 @@
 /**
- * Seeds `users_table` for local development.
+ * Seeds default settings and admin employee for local development.
  *
- * Prerequisite: apply migrations first, e.g. `npm run db:migrate`
- * (uses `DB_FILE_NAME` from `.env`, same as the app).
+ * Prerequisite: `npm run db:migrate`
+ * Uses `DB_FILE_NAME` from `.env` (same as the app).
  */
 import 'dotenv/config'
-import { initializeDatabase, getDb } from '../src/main/db/db'
-import { usersTable } from '../src/main/db/models/schema'
+import { initializeDatabase } from '../src/main/db/db'
+import { createDefaultAdmin } from '../src/main/modules/auth/auth.repository'
+import { getSettings } from '../src/main/modules/settings/settings.repository'
 
 const url = process.env.DB_FILE_NAME
 if (url === undefined || url.length === 0) {
@@ -16,21 +17,10 @@ if (url === undefined || url.length === 0) {
 initializeDatabase(url)
 
 async function seed(): Promise<void> {
-  const db = getDb()
-  const existing = await db.select().from(usersTable)
+  await createDefaultAdmin()
+  await getSettings()
 
-  if (existing.length > 0) {
-    console.log(`Seed skipped: users_table already has ${existing.length} row(s).`)
-    return
-  }
-
-  await db.insert(usersTable).values([
-    { name: 'Ada Lovelace', age: 36, email: 'ada@example.com' },
-    { name: 'Alan Turing', age: 41, email: 'alan@example.com' },
-    { name: 'Grace Hopper', age: 85, email: 'grace@example.com' }
-  ])
-
-  console.log('Seed completed: inserted 3 users.')
+  console.log('Seed completed: default settings + admin (admin / admin123) if none existed.')
 }
 
 seed().catch((err) => {

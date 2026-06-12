@@ -1,16 +1,14 @@
-import Versions from './components/Versions'
-import { UsersDemo } from './features/users/UsersDemo'
-import { Button } from './components/ui/button'
+import { HashRouter } from 'react-router-dom'
+import { AuthProvider } from '@/app/AuthContext'
+import { AppRoutes } from '@/app/routes'
 
 function App(): React.JSX.Element {
-  // Create a client
   return (
-    <>
-      <Button>Click me</Button>
-      <h1 className="text-3xl font-bold underline">Hello World</h1>
-      <UsersDemo />
-      <Versions />
-    </>
+    <HashRouter>
+      <AuthProvider>
+        <AppRoutes />
+      </AuthProvider>
+    </HashRouter>
   )
 }
 

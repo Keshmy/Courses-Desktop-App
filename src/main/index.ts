@@ -4,14 +4,16 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { initializeDatabase } from './db/db'
+import { runBootstrapMigrations } from './db/bootstrap-migrations'
 import { resolveDatabaseUrl } from './db/database-url'
 import { registerIpcHandlers } from './ipc/register-ipc'
+import { setupAutoBackupOnQuit } from './lib/auto-backup'
 
 function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
-    width: 900,
-    height: 670,
+    width: 1200,
+    height: 800,
     show: false,
     autoHideMenuBar: true,
     ...(process.platform === 'linux' ? { icon } : {}),
@@ -42,7 +44,7 @@ function createWindow(): void {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.whenReady().then(() => {
+app.whenReady().then(async () => {
   // Set app user model id for windows
   electronApp.setAppUserModelId('com.electron')
 
@@ -55,7 +57,9 @@ app.whenReady().then(() => {
 
   // Local DB (Drizzle + libSQL). Uses DB_FILE_NAME from .env when set.
   initializeDatabase(resolveDatabaseUrl())
+  await runBootstrapMigrations()
   registerIpcHandlers()
+  setupAutoBackupOnQuit()
 
   createWindow()
 
