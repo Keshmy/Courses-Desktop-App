@@ -15,13 +15,30 @@ import type {
   ChangePasswordResponse
 } from '../shared/types/employee'
 // Students
-import type { StudentDto, CreateStudentRequest, UpdateStudentRequest } from '../shared/types/student'
+import type {
+  StudentDto,
+  CreateStudentRequest,
+  UpdateStudentRequest
+} from '../shared/types/student'
 // Teachers
-import type { TeacherDto, CreateTeacherRequest, UpdateTeacherRequest } from '../shared/types/teacher'
+import type {
+  TeacherDto,
+  CreateTeacherRequest,
+  UpdateTeacherRequest
+} from '../shared/types/teacher'
 // Subjects
-import type { SubjectDto, CreateSubjectRequest, UpdateSubjectRequest } from '../shared/types/subject'
+import type {
+  SubjectDto,
+  CreateSubjectRequest,
+  UpdateSubjectRequest
+} from '../shared/types/subject'
 // Groups
-import type { GroupDto, GroupListItemDto, CreateGroupRequest, UpdateGroupRequest } from '../shared/types/group'
+import type {
+  GroupDto,
+  GroupListItemDto,
+  CreateGroupRequest,
+  UpdateGroupRequest
+} from '../shared/types/group'
 // Enrollments
 import type { EnrollmentDto, CreateEnrollmentRequest } from '../shared/types/payment'
 // Payments
@@ -35,24 +52,87 @@ import type {
 } from '../shared/types/payment'
 import type { ActivityLogFilters, ActivityLogListResult } from '../shared/types/activity-log'
 // Finances
-import type { FinanceEntryDto, CreateFinanceEntryRequest, FinanceSummaryDto, TeacherSalaryDto, EmployeeSalaryDto, PaySalaryRequest } from '../shared/types/finance'
+import type {
+  FinanceEntryDto,
+  CreateFinanceEntryRequest,
+  FinanceSummaryDto,
+  TeacherSalaryDto,
+  EmployeeSalaryDto,
+  PaySalaryRequest
+} from '../shared/types/finance'
 // Settings
-import type { SettingsDto, UpdateSettingsRequest, DashboardStatsDto, RecentPaymentDto } from '../shared/types/settings'
+import type {
+  SettingsDto,
+  UpdateSettingsRequest,
+  DashboardStatsDto,
+  RecentPaymentDto
+} from '../shared/types/settings'
+import type {
+  ActivationInfo,
+  ActivationStatus,
+  LicensePlan,
+  LicenseRenewResult,
+  LicenseStatusResponse,
+  LicenseSyncResult
+} from '../shared/types/license'
 
 const api = {
+  openExternal: (url: string): Promise<boolean> =>
+    ipcRenderer.invoke(IPC_CHANNELS.APP_OPEN_EXTERNAL, url),
+  activation: {
+    isActivated: (): Promise<boolean> => ipcRenderer.invoke(IPC_CHANNELS.ACTIVATION_IS_ACTIVATED),
+    activate: (licenseKey: string): Promise<ActivationStatus> =>
+      ipcRenderer.invoke(IPC_CHANNELS.ACTIVATION_ACTIVATE, licenseKey),
+    getInfo: (): Promise<ActivationInfo> => ipcRenderer.invoke(IPC_CHANNELS.ACTIVATION_GET_INFO),
+    checkLicense: (): Promise<ActivationStatus> =>
+      ipcRenderer.invoke(IPC_CHANNELS.ACTIVATION_CHECK_LICENSE),
+    syncLicense: (): Promise<LicenseSyncResult> =>
+      ipcRenderer.invoke(IPC_CHANNELS.ACTIVATION_SYNC_LICENSE),
+    getHWID: (): Promise<string> => ipcRenderer.invoke(IPC_CHANNELS.ACTIVATION_GET_HWID),
+    getWarningWindowDays: (): Promise<number> =>
+      ipcRenderer.invoke(IPC_CHANNELS.ACTIVATION_GET_WARNING_DAYS),
+    listPlans: (): Promise<LicensePlan[]> => ipcRenderer.invoke(IPC_CHANNELS.ACTIVATION_LIST_PLANS),
+    checkServerStatus: (hwid?: string): Promise<LicenseStatusResponse> =>
+      ipcRenderer.invoke(IPC_CHANNELS.ACTIVATION_CHECK_SERVER_STATUS, hwid),
+    requestAccess: (request: {
+      name: string
+      phone: string
+      planId: string
+      hwid: string
+    }): Promise<LicenseRenewResult> =>
+      ipcRenderer.invoke(IPC_CHANNELS.ACTIVATION_REQUEST_ACCESS, request),
+    renew: (customerId: string, hwid: string, planId: string): Promise<LicenseRenewResult> =>
+      ipcRenderer.invoke(IPC_CHANNELS.ACTIVATION_RENEW, customerId, hwid, planId),
+    cancelPending: (subscriptionId: string): Promise<boolean> =>
+      ipcRenderer.invoke(IPC_CHANNELS.ACTIVATION_CANCEL_PENDING, subscriptionId),
+    reset: (): Promise<boolean> => ipcRenderer.invoke(IPC_CHANNELS.ACTIVATION_RESET),
+    onLicenseInvalid: (callback: (error: string) => void): (() => void) => {
+      const handler = (_event: Electron.IpcRendererEvent, error: string): void => callback(error)
+      ipcRenderer.on('license:invalid', handler)
+      return () => ipcRenderer.removeListener('license:invalid', handler)
+    },
+    onLicenseUpdated: (
+      callback: (license: { expiresAt?: string; customerId?: string }) => void
+    ): (() => void) => {
+      const handler = (
+        _event: Electron.IpcRendererEvent,
+        license: { expiresAt?: string; customerId?: string }
+      ): void => callback(license)
+      ipcRenderer.on('license:updated', handler)
+      return () => ipcRenderer.removeListener('license:updated', handler)
+    }
+  },
   auth: {
     login: (request: LoginRequest): Promise<LoginResponse> =>
       ipcRenderer.invoke(IPC_CHANNELS.AUTH_LOGIN, request),
-    checkFirstRun: (): Promise<boolean> =>
-      ipcRenderer.invoke(IPC_CHANNELS.AUTH_CHECK_FIRST_RUN),
+    checkFirstRun: (): Promise<boolean> => ipcRenderer.invoke(IPC_CHANNELS.AUTH_CHECK_FIRST_RUN),
     resetPassword: (request: ResetPasswordRequest): Promise<ResetPasswordResponse> =>
       ipcRenderer.invoke(IPC_CHANNELS.AUTH_RESET_PASSWORD, request),
     changePassword: (request: ChangePasswordRequest): Promise<ChangePasswordResponse> =>
       ipcRenderer.invoke(IPC_CHANNELS.AUTH_CHANGE_PASSWORD, request)
   },
   employees: {
-    list: (): Promise<EmployeeDto[]> =>
-      ipcRenderer.invoke(IPC_CHANNELS.EMPLOYEES_LIST),
+    list: (): Promise<EmployeeDto[]> => ipcRenderer.invoke(IPC_CHANNELS.EMPLOYEES_LIST),
     get: (id: number): Promise<EmployeeDto | null> =>
       ipcRenderer.invoke(IPC_CHANNELS.EMPLOYEES_GET, id),
     create: (data: CreateEmployeeRequest, performedBy?: number): Promise<EmployeeDto> =>
@@ -63,8 +143,7 @@ const api = {
       ipcRenderer.invoke(IPC_CHANNELS.EMPLOYEES_TOGGLE_ACTIVE, id, performedBy)
   },
   students: {
-    list: (): Promise<StudentDto[]> =>
-      ipcRenderer.invoke(IPC_CHANNELS.STUDENTS_LIST),
+    list: (): Promise<StudentDto[]> => ipcRenderer.invoke(IPC_CHANNELS.STUDENTS_LIST),
     get: (id: number): Promise<StudentDto | null> =>
       ipcRenderer.invoke(IPC_CHANNELS.STUDENTS_GET, id),
     create: (data: CreateStudentRequest, performedBy?: number): Promise<StudentDto> =>
@@ -77,8 +156,7 @@ const api = {
       ipcRenderer.invoke(IPC_CHANNELS.STUDENTS_TOGGLE_ACTIVE, id, performedBy)
   },
   teachers: {
-    list: (): Promise<TeacherDto[]> =>
-      ipcRenderer.invoke(IPC_CHANNELS.TEACHERS_LIST),
+    list: (): Promise<TeacherDto[]> => ipcRenderer.invoke(IPC_CHANNELS.TEACHERS_LIST),
     get: (id: number): Promise<TeacherDto | null> =>
       ipcRenderer.invoke(IPC_CHANNELS.TEACHERS_GET, id),
     create: (data: CreateTeacherRequest, performedBy?: number): Promise<TeacherDto> =>
@@ -89,8 +167,7 @@ const api = {
       ipcRenderer.invoke(IPC_CHANNELS.TEACHERS_TOGGLE_ACTIVE, id, performedBy)
   },
   subjects: {
-    list: (): Promise<SubjectDto[]> =>
-      ipcRenderer.invoke(IPC_CHANNELS.SUBJECTS_LIST),
+    list: (): Promise<SubjectDto[]> => ipcRenderer.invoke(IPC_CHANNELS.SUBJECTS_LIST),
     get: (id: number): Promise<SubjectDto | null> =>
       ipcRenderer.invoke(IPC_CHANNELS.SUBJECTS_GET, id),
     create: (data: CreateSubjectRequest, performedBy?: number): Promise<SubjectDto> =>
@@ -101,12 +178,10 @@ const api = {
       ipcRenderer.invoke(IPC_CHANNELS.SUBJECTS_TOGGLE_ACTIVE, id, performedBy)
   },
   groups: {
-    list: (): Promise<GroupListItemDto[]> =>
-      ipcRenderer.invoke(IPC_CHANNELS.GROUPS_LIST),
+    list: (): Promise<GroupListItemDto[]> => ipcRenderer.invoke(IPC_CHANNELS.GROUPS_LIST),
     listBySubject: (subjectId: number): Promise<GroupListItemDto[]> =>
       ipcRenderer.invoke(IPC_CHANNELS.GROUPS_LIST_BY_SUBJECT, subjectId),
-    get: (id: number): Promise<GroupDto | null> =>
-      ipcRenderer.invoke(IPC_CHANNELS.GROUPS_GET, id),
+    get: (id: number): Promise<GroupDto | null> => ipcRenderer.invoke(IPC_CHANNELS.GROUPS_GET, id),
     create: (data: CreateGroupRequest, performedBy?: number): Promise<GroupDto> =>
       ipcRenderer.invoke(IPC_CHANNELS.GROUPS_CREATE, data, performedBy),
     update: (data: UpdateGroupRequest, performedBy?: number): Promise<GroupDto | null> =>
@@ -129,7 +204,10 @@ const api = {
       performedBy?: number
     ): Promise<EnrollmentDto | null> =>
       ipcRenderer.invoke(IPC_CHANNELS.ENROLLMENTS_UPDATE_STATUS, id, status, performedBy),
-    changeGroup: (data: ChangeEnrollmentGroupRequest, performedBy?: number): Promise<EnrollmentDto> =>
+    changeGroup: (
+      data: ChangeEnrollmentGroupRequest,
+      performedBy?: number
+    ): Promise<EnrollmentDto> =>
       ipcRenderer.invoke(IPC_CHANNELS.ENROLLMENTS_CHANGE_GROUP, data, performedBy)
   },
   activity: {
@@ -149,14 +227,16 @@ const api = {
       ipcRenderer.invoke(IPC_CHANNELS.PAYMENTS_GET_RECEIPT, paymentId)
   },
   finances: {
-    listEntries: (filters?: { type?: 'income' | 'expense'; dateFrom?: string; dateTo?: string }): Promise<FinanceEntryDto[]> =>
-      ipcRenderer.invoke(IPC_CHANNELS.FINANCE_LIST, filters),
+    listEntries: (filters?: {
+      type?: 'income' | 'expense'
+      dateFrom?: string
+      dateTo?: string
+    }): Promise<FinanceEntryDto[]> => ipcRenderer.invoke(IPC_CHANNELS.FINANCE_LIST, filters),
     createEntry: (data: CreateFinanceEntryRequest): Promise<FinanceEntryDto> =>
       ipcRenderer.invoke(IPC_CHANNELS.FINANCE_CREATE, data),
     deleteEntry: (id: number, performedBy?: number): Promise<boolean> =>
       ipcRenderer.invoke(IPC_CHANNELS.FINANCE_DELETE, id, performedBy),
-    getSummary: (): Promise<FinanceSummaryDto> =>
-      ipcRenderer.invoke(IPC_CHANNELS.FINANCE_SUMMARY),
+    getSummary: (): Promise<FinanceSummaryDto> => ipcRenderer.invoke(IPC_CHANNELS.FINANCE_SUMMARY),
     payTeacherSalary: (data: PaySalaryRequest): Promise<TeacherSalaryDto> =>
       ipcRenderer.invoke(IPC_CHANNELS.SALARIES_PAY_TEACHER, data),
     payEmployeeSalary: (data: PaySalaryRequest): Promise<EmployeeSalaryDto> =>
@@ -167,8 +247,7 @@ const api = {
       ipcRenderer.invoke(IPC_CHANNELS.SALARIES_LIST_EMPLOYEE, employeeId)
   },
   settings: {
-    getSettings: (): Promise<SettingsDto> =>
-      ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_GET),
+    getSettings: (): Promise<SettingsDto> => ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_GET),
     getLogoDataUrl: (): Promise<string | null> =>
       ipcRenderer.invoke(IPC_CHANNELS.SETTINGS_GET_LOGO),
     updateSettings: (data: UpdateSettingsRequest, performedBy?: number): Promise<SettingsDto> =>

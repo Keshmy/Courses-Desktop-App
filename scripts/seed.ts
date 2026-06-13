@@ -6,6 +6,7 @@
  */
 import 'dotenv/config'
 import { initializeDatabase } from '../src/main/db/db'
+import { runBootstrapMigrations } from '../src/main/db/bootstrap-migrations'
 import { createDefaultAdmin } from '../src/main/modules/auth/auth.repository'
 import { getSettings } from '../src/main/modules/settings/settings.repository'
 
@@ -17,6 +18,7 @@ if (url === undefined || url.length === 0) {
 initializeDatabase(url)
 
 async function seed(): Promise<void> {
+  await runBootstrapMigrations()
   await createDefaultAdmin()
   await getSettings()
 

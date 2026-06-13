@@ -9,6 +9,9 @@ import { resolveDatabaseUrl } from './db/database-url'
 import { registerIpcHandlers } from './ipc/register-ipc'
 import { setupAutoBackupOnQuit } from './lib/auto-backup'
 
+const electronRendererUrl = process.env['ELECTRON_RENDERER_URL']
+const isDev = is.dev && Boolean(electronRendererUrl)
+
 function createWindow(): void {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
@@ -34,8 +37,11 @@ function createWindow(): void {
 
   // HMR for renderer base on electron-vite cli.
   // Load the remote URL for development or the local html file for production.
-  if (is.dev && process.env['ELECTRON_RENDERER_URL']) {
-    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
+  if (isDev && electronRendererUrl) {
+    mainWindow.loadURL(electronRendererUrl)
+    mainWindow.webContents.once('did-finish-load', () => {
+      mainWindow.webContents.openDevTools({ mode: 'detach' })
+    })
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }

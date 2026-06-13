@@ -8,11 +8,17 @@ import { registerPaymentsIpcHandlers } from '../modules/payments/payments.ipc'
 import { registerFinancesIpcHandlers } from '../modules/finances/finances.ipc'
 import { registerSettingsIpcHandlers } from '../modules/settings/settings.ipc'
 import { registerActivityIpcHandlers } from '../modules/activity/activity.ipc'
+import {
+  installLicenseGuard,
+  registerActivationIpcHandlers
+} from '../modules/activation/activation.ipc'
 
 /**
  * Single entry point to register all IPC handlers for the main process.
  */
 export function registerIpcHandlers(): void {
+  installLicenseGuard()
+  registerActivationIpcHandlers()
   registerAuthIpcHandlers()
   registerStudentsIpcHandlers()
   registerEnrollmentsIpcHandlers()

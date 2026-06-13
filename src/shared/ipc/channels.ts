@@ -9,6 +9,24 @@ export const IPC_CHANNELS = {
   AUTH_RESET_PASSWORD: 'auth:reset-password',
   AUTH_CHANGE_PASSWORD: 'auth:change-password',
 
+  // ── App ───────────────────────────────
+  APP_OPEN_EXTERNAL: 'app:open-external',
+
+  // ── Activation ────────────────────────
+  ACTIVATION_IS_ACTIVATED: 'activation:is-activated',
+  ACTIVATION_ACTIVATE: 'activation:activate',
+  ACTIVATION_GET_INFO: 'activation:get-info',
+  ACTIVATION_CHECK_LICENSE: 'activation:check-license',
+  ACTIVATION_SYNC_LICENSE: 'activation:sync-license',
+  ACTIVATION_GET_HWID: 'activation:get-hwid',
+  ACTIVATION_GET_WARNING_DAYS: 'activation:get-warning-days',
+  ACTIVATION_LIST_PLANS: 'activation:list-plans',
+  ACTIVATION_CHECK_SERVER_STATUS: 'activation:check-server-status',
+  ACTIVATION_REQUEST_ACCESS: 'activation:request-access',
+  ACTIVATION_RENEW: 'activation:renew',
+  ACTIVATION_CANCEL_PENDING: 'activation:cancel-pending',
+  ACTIVATION_RESET: 'activation:reset',
+
   // ── Employees ─────────────────────────
   EMPLOYEES_LIST: 'employees:list',
   EMPLOYEES_CREATE: 'employees:create',

@@ -10,9 +10,21 @@ import type {
   ChangePasswordRequest,
   ChangePasswordResponse
 } from '../shared/types/employee'
-import type { StudentDto, CreateStudentRequest, UpdateStudentRequest } from '../shared/types/student'
-import type { TeacherDto, CreateTeacherRequest, UpdateTeacherRequest } from '../shared/types/teacher'
-import type { SubjectDto, CreateSubjectRequest, UpdateSubjectRequest } from '../shared/types/subject'
+import type {
+  StudentDto,
+  CreateStudentRequest,
+  UpdateStudentRequest
+} from '../shared/types/student'
+import type {
+  TeacherDto,
+  CreateTeacherRequest,
+  UpdateTeacherRequest
+} from '../shared/types/teacher'
+import type {
+  SubjectDto,
+  CreateSubjectRequest,
+  UpdateSubjectRequest
+} from '../shared/types/subject'
 import type {
   GroupDto,
   GroupListItemDto,
@@ -30,10 +42,56 @@ import type {
   ReceiptData
 } from '../shared/types/payment'
 import type { ActivityLogFilters, ActivityLogListResult } from '../shared/types/activity-log'
-import type { FinanceEntryDto, CreateFinanceEntryRequest, FinanceSummaryDto, TeacherSalaryDto, EmployeeSalaryDto, PaySalaryRequest } from '../shared/types/finance'
-import type { SettingsDto, UpdateSettingsRequest, DashboardStatsDto, RecentPaymentDto } from '../shared/types/settings'
+import type {
+  FinanceEntryDto,
+  CreateFinanceEntryRequest,
+  FinanceSummaryDto,
+  TeacherSalaryDto,
+  EmployeeSalaryDto,
+  PaySalaryRequest
+} from '../shared/types/finance'
+import type {
+  SettingsDto,
+  UpdateSettingsRequest,
+  DashboardStatsDto,
+  RecentPaymentDto
+} from '../shared/types/settings'
+import type {
+  ActivationInfo,
+  ActivationStatus,
+  LicenseData,
+  LicensePlan,
+  LicenseRenewResult,
+  LicenseStatusResponse,
+  LicenseSyncResult
+} from '../shared/types/license'
 
 export interface AppPreloadApi {
+  openExternal: (url: string) => Promise<boolean>
+  activation: {
+    isActivated: () => Promise<boolean>
+    activate: (licenseKey: string) => Promise<ActivationStatus>
+    getInfo: () => Promise<ActivationInfo>
+    checkLicense: () => Promise<ActivationStatus>
+    syncLicense: () => Promise<LicenseSyncResult>
+    getHWID: () => Promise<string>
+    getWarningWindowDays: () => Promise<number>
+    listPlans: () => Promise<LicensePlan[]>
+    checkServerStatus: (hwid?: string) => Promise<LicenseStatusResponse>
+    requestAccess: (request: {
+      name: string
+      phone: string
+      planId: string
+      hwid: string
+    }) => Promise<LicenseRenewResult>
+    renew: (customerId: string, hwid: string, planId: string) => Promise<LicenseRenewResult>
+    cancelPending: (subscriptionId: string) => Promise<boolean>
+    reset: () => Promise<boolean>
+    onLicenseInvalid: (callback: (error: string) => void) => () => void
+    onLicenseUpdated: (
+      callback: (license: Pick<LicenseData, 'expiresAt' | 'customerId'>) => void
+    ) => () => void
+  }
   auth: {
     login: (request: LoginRequest) => Promise<LoginResponse>
     checkFirstRun: () => Promise<boolean>
@@ -87,7 +145,10 @@ export interface AppPreloadApi {
       status: 'active' | 'completed' | 'cancelled',
       performedBy?: number
     ) => Promise<EnrollmentDto | null>
-    changeGroup: (data: ChangeEnrollmentGroupRequest, performedBy?: number) => Promise<EnrollmentDto>
+    changeGroup: (
+      data: ChangeEnrollmentGroupRequest,
+      performedBy?: number
+    ) => Promise<EnrollmentDto>
   }
   activity: {
     list: (filters?: ActivityLogFilters) => Promise<ActivityLogListResult>
@@ -100,7 +161,11 @@ export interface AppPreloadApi {
     getReceipt: (paymentId: number) => Promise<ReceiptData | null>
   }
   finances: {
-    listEntries: (filters?: { type?: 'income' | 'expense'; dateFrom?: string; dateTo?: string }) => Promise<FinanceEntryDto[]>
+    listEntries: (filters?: {
+      type?: 'income' | 'expense'
+      dateFrom?: string
+      dateTo?: string
+    }) => Promise<FinanceEntryDto[]>
     createEntry: (data: CreateFinanceEntryRequest) => Promise<FinanceEntryDto>
     deleteEntry: (id: number, performedBy?: number) => Promise<boolean>
     getSummary: () => Promise<FinanceSummaryDto>
