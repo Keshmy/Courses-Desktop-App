@@ -1,6 +1,7 @@
-import { ipcMain, shell, type IpcMainInvokeEvent } from 'electron'
+import { BrowserWindow, ipcMain, shell, type IpcMainInvokeEvent } from 'electron'
 import { IPC_CHANNELS } from '../../../shared/ipc/channels'
 import {
+  LICENSE_CHECK_INTERVAL_MS,
   LICENSE_SERVER_BASE_URL,
   LICENSE_SYSTEM_SLUG,
   LICENSE_WARNING_WINDOW_DAYS
@@ -13,6 +14,8 @@ import type {
 import { activationService } from './activation.service'
 
 let guardInstalled = false
+let licenseCheckInterval: NodeJS.Timeout | null = null
+let isLicenseCheckRunning = false
 
 function isLicenseExemptChannel(channel: string): boolean {
   return channel.startsWith('activation:') || channel === IPC_CHANNELS.APP_OPEN_EXTERNAL
@@ -40,6 +43,79 @@ export function installLicenseGuard(): void {
       return listener(event, ...args)
     })
   }) as typeof ipcMain.handle
+}
+
+function notifyLicenseInvalid(window: BrowserWindow, error?: string): void {
+  if (!window.isDestroyed()) {
+    window.webContents.send('license:invalid', error || 'LICENSE_INVALID')
+  }
+}
+
+function notifyLicenseUpdated(
+  window: BrowserWindow,
+  license?: { expiresAt?: string; customerId?: string }
+): void {
+  if (!window.isDestroyed()) {
+    window.webContents.send('license:updated', license || {})
+  }
+}
+
+async function runLicenseCheck(window: BrowserWindow, trigger: 'startup' | 'interval') {
+  if (isLicenseCheckRunning || window.isDestroyed()) return
+
+  isLicenseCheckRunning = true
+  try {
+    const syncResult = await activationService.syncLicense()
+    if (syncResult?.kind === 'inactive') {
+      notifyLicenseInvalid(window, syncResult.reason)
+      activationService.logLicenseEvent('main-check-inactive', { trigger, reason: syncResult.reason })
+      return
+    }
+
+    if (syncResult?.kind === 'updated') {
+      notifyLicenseUpdated(window, {
+        expiresAt: syncResult.status.license?.expiresAt,
+        customerId: syncResult.status.license?.customerId
+      })
+      activationService.logLicenseEvent('main-check-updated', { trigger })
+      return
+    }
+
+    const status = await activationService.checkLicense()
+    if (!status.activated) {
+      notifyLicenseInvalid(window, status.error)
+      activationService.logLicenseEvent('main-check-blocked', { trigger, reason: status.error })
+      return
+    }
+
+    activationService.logLicenseEvent('main-check-passed', {
+      trigger,
+      expiresAt: status.license?.expiresAt ?? null
+    })
+  } catch (error) {
+    console.error('[LICENSE] Main license check failed:', error)
+  } finally {
+    isLicenseCheckRunning = false
+  }
+}
+
+export function startPeriodicLicenseCheck(window: BrowserWindow): void {
+  if (licenseCheckInterval) {
+    clearInterval(licenseCheckInterval)
+    licenseCheckInterval = null
+  }
+
+  void runLicenseCheck(window, 'startup')
+  licenseCheckInterval = setInterval(() => {
+    void runLicenseCheck(window, 'interval')
+  }, LICENSE_CHECK_INTERVAL_MS)
+
+  window.on('closed', () => {
+    if (licenseCheckInterval) {
+      clearInterval(licenseCheckInterval)
+      licenseCheckInterval = null
+    }
+  })
 }
 
 export function registerActivationIpcHandlers(): void {

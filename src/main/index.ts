@@ -6,13 +6,13 @@ import icon from '../../resources/icon.png?asset'
 import { initializeDatabase } from './db/db'
 import { runBootstrapMigrations } from './db/bootstrap-migrations'
 import { resolveDatabaseUrl } from './db/database-url'
-import { registerIpcHandlers } from './ipc/register-ipc'
+import { registerIpcHandlers, startPeriodicLicenseCheck } from './ipc/register-ipc'
 import { setupAutoBackupOnQuit } from './lib/auto-backup'
 
 const electronRendererUrl = process.env['ELECTRON_RENDERER_URL']
 const isDev = is.dev && Boolean(electronRendererUrl)
 
-function createWindow(): void {
+function createWindow(): BrowserWindow {
   // Create the browser window.
   const mainWindow = new BrowserWindow({
     width: 1200,
@@ -45,6 +45,8 @@ function createWindow(): void {
   } else {
     mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
   }
+
+  return mainWindow
 }
 
 // This method will be called when Electron has finished
@@ -67,12 +69,12 @@ app.whenReady().then(async () => {
   registerIpcHandlers()
   setupAutoBackupOnQuit()
 
-  createWindow()
+  startPeriodicLicenseCheck(createWindow())
 
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) createWindow()
+    if (BrowserWindow.getAllWindows().length === 0) startPeriodicLicenseCheck(createWindow())
   })
 })
 

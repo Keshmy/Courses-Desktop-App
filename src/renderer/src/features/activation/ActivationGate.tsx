@@ -4,11 +4,12 @@ import { AlertTriangle, ExternalLink, Loader2, RefreshCw } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Dialog } from '@/components/ui/dialog'
 import { LICENSE_CHECK_INTERVAL_MS } from '../../../../shared/license'
-import type { LicensePlan } from '../../../../shared/types/license'
+import type { LicensePlan, LicenseServerStatus } from '../../../../shared/types/license'
 import { useAuth } from '@/app/AuthContext'
 import { ActivationPage } from './ActivationPage'
 
 const DAY_MS = 24 * 60 * 60 * 1000
+const PENDING_RENEWAL_STATUSES: LicenseServerStatus[] = ['PENDING_APPROVAL', 'RENEWAL_PENDING']
 
 function formatDuration(days: number): string {
   if (days >= 365) {
@@ -155,14 +156,50 @@ export function ActivationGate({ children }: { children: ReactNode }): React.JSX
     }
   }
 
+  const hydrateRenewalStatus = async (): Promise<void> => {
+    if (!machineHwid) return
+
+    setRenewLoading(true)
+    try {
+      const data = await window.api.activation.checkServerStatus(machineHwid)
+
+      if (data.customerId) setLicenseCustomerId(data.customerId)
+
+      if (data.status === 'ACTIVE' && data.licenseKey) {
+        const result = await window.api.activation.activate(data.licenseKey)
+        if (result.activated) {
+          setIsActivated(true)
+          if (result.license?.expiresAt) {
+            const expiresAtMs = new Date(result.license.expiresAt).getTime()
+            setLicenseExpiresAtMs(Number.isNaN(expiresAtMs) ? null : expiresAtMs)
+          }
+          setLicenseCustomerId(result.license?.customerId || data.customerId || null)
+        }
+      }
+
+      if (data.status && PENDING_RENEWAL_STATUSES.includes(data.status)) {
+        setRenewPending(true)
+        setPendingSubscriptionId(data.subscriptionId || null)
+        setPendingPaymentUrl(data.payment_url || null)
+        setRenewMessage('لديك طلب تجديد قيد الانتظار.')
+        return
+      }
+
+      setRenewPending(false)
+      setPendingSubscriptionId(null)
+      setPendingPaymentUrl(null)
+    } catch {
+      setRenewError('تعذر تحميل حالة طلب التجديد الحالي.')
+    } finally {
+      setRenewLoading(false)
+    }
+  }
+
   const openRenew = async (): Promise<void> => {
     setRenewOpen(true)
     setRenewError('')
     setRenewMessage('')
-    setRenewPending(false)
-    setPendingSubscriptionId(null)
-    setPendingPaymentUrl(null)
-    await loadPlans()
+    await Promise.all([loadPlans(), hydrateRenewalStatus()])
   }
 
   const requestRenew = async (): Promise<void> => {

@@ -10,8 +10,11 @@ import { registerSettingsIpcHandlers } from '../modules/settings/settings.ipc'
 import { registerActivityIpcHandlers } from '../modules/activity/activity.ipc'
 import {
   installLicenseGuard,
-  registerActivationIpcHandlers
+  registerActivationIpcHandlers,
+  startPeriodicLicenseCheck
 } from '../modules/activation/activation.ipc'
+
+export { startPeriodicLicenseCheck }
 
 /**
  * Single entry point to register all IPC handlers for the main process.

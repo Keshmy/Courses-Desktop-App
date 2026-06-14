@@ -31,6 +31,7 @@ const NON_BLOCKING_SERVER_LOCK_REASONS = new Set([
   'RENEWAL_PENDING',
   'PENDING_APPROVAL'
 ])
+const HARD_SERVER_LOCK_REASONS = new Set(['EXPIRED', 'REJECTED', 'NOT_FOUND'])
 
 type ServerLockState = {
   locked: boolean
@@ -94,6 +95,25 @@ function canonicalStringify(value: unknown): string {
 }
 
 export const activationService = {
+  logLicenseEvent(event: string, details: Record<string, unknown> = {}): void {
+    try {
+      console.info(`[LICENSE] ${event}`, JSON.stringify(details))
+    } catch {
+      console.info(`[LICENSE] ${event}`, details)
+    }
+  },
+
+  deleteStoredLicense(reason: string): void {
+    try {
+      if (existsSync(LICENSE_FILE)) {
+        unlinkSync(LICENSE_FILE)
+        this.logLicenseEvent('local-license-deleted', { reason })
+      }
+    } catch (error) {
+      console.error('Failed to delete local license file:', error)
+    }
+  },
+
   getServerLockState(): ServerLockState {
     try {
       if (!existsSync(SERVER_LOCK_FILE)) return { locked: false }
@@ -120,6 +140,7 @@ export const activationService = {
         }),
         'utf-8'
       )
+      this.logLicenseEvent('server-lock-set', { reason })
     } catch (error) {
       console.error('Failed to write server lock file:', error)
     }
@@ -127,7 +148,10 @@ export const activationService = {
 
   clearServerLock(): void {
     try {
-      if (existsSync(SERVER_LOCK_FILE)) unlinkSync(SERVER_LOCK_FILE)
+      if (existsSync(SERVER_LOCK_FILE)) {
+        unlinkSync(SERVER_LOCK_FILE)
+        this.logLicenseEvent('server-lock-cleared')
+      }
     } catch (error) {
       console.error('Failed to clear server lock file:', error)
     }
@@ -273,6 +297,10 @@ export const activationService = {
     try {
       const serverLock = this.getServerLockState()
       if (serverLock.locked) {
+        if (serverLock.reason && HARD_SERVER_LOCK_REASONS.has(serverLock.reason)) {
+          this.deleteStoredLicense(serverLock.reason)
+        }
+
         if (serverLock.reason && NON_BLOCKING_SERVER_LOCK_REASONS.has(serverLock.reason)) {
           const localStatus = await this.checkStoredLicense()
           if (localStatus.activated) {
@@ -333,10 +361,28 @@ export const activationService = {
 
       const data = (await response.json()) as { status?: string; licenseKey?: string }
       if (data.status && data.status !== 'ACTIVE') {
-        if (NON_BLOCKING_SERVER_LOCK_REASONS.has(data.status)) {
+        const serverLock = this.getServerLockState()
+        const hasHardServerLock = Boolean(
+          serverLock.locked &&
+            serverLock.reason &&
+            HARD_SERVER_LOCK_REASONS.has(serverLock.reason)
+        )
+
+        this.logLicenseEvent('server-status', {
+          status: data.status,
+          previousLock: serverLock.reason ?? null,
+          hardLocked: hasHardServerLock
+        })
+
+        if (HARD_SERVER_LOCK_REASONS.has(data.status)) {
+          this.deleteStoredLicense(data.status)
+        }
+
+        if (NON_BLOCKING_SERVER_LOCK_REASONS.has(data.status) && !hasHardServerLock) {
           const localStatus = await this.checkStoredLicense()
           if (localStatus.activated) {
             this.clearServerLock()
+            this.logLicenseEvent('server-status-kept-local-access', { status: data.status })
             return null
           }
         }
