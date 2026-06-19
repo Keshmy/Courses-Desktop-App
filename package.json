@@ -1,10 +1,10 @@
 {
-  "name": "-",
+  "name": "courses-desktop-app",
   "version": "1.0.0",
-  "description": "An Electron application with React and TypeScript",
+  "description": "Desktop courses management app",
   "main": "./out/main/index.js",
-  "author": "example.com",
-  "homepage": "https://electron-vite.org",
+  "author": "Keshmy",
+  "homepage": "https://github.com/Keshmy/Courses-Desktop-App",
   "scripts": {
     "format": "prettier --write .",
     "lint": "eslint --cache .",

@@ -8,6 +8,7 @@ import { runBootstrapMigrations } from './db/bootstrap-migrations'
 import { resolveDatabaseUrl } from './db/database-url'
 import { registerIpcHandlers, startPeriodicLicenseCheck } from './ipc/register-ipc'
 import { setupAutoBackupOnQuit } from './lib/auto-backup'
+import { setupAutoUpdater } from './lib/auto-updater'
 
 const electronRendererUrl = process.env['ELECTRON_RENDERER_URL']
 const isDev = is.dev && Boolean(electronRendererUrl)
@@ -69,12 +70,18 @@ app.whenReady().then(async () => {
   registerIpcHandlers()
   setupAutoBackupOnQuit()
 
-  startPeriodicLicenseCheck(createWindow())
+  const mainWindow = createWindow()
+  startPeriodicLicenseCheck(mainWindow)
+  setupAutoUpdater(mainWindow)
 
   app.on('activate', function () {
     // On macOS it's common to re-create a window in the app when the
     // dock icon is clicked and there are no other windows open.
-    if (BrowserWindow.getAllWindows().length === 0) startPeriodicLicenseCheck(createWindow())
+    if (BrowserWindow.getAllWindows().length === 0) {
+      const mainWindow = createWindow()
+      startPeriodicLicenseCheck(mainWindow)
+      setupAutoUpdater(mainWindow)
+    }
   })
 })
 

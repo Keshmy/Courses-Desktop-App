@@ -75,10 +75,20 @@ import type {
   LicenseStatusResponse,
   LicenseSyncResult
 } from '../shared/types/license'
+import type { UpdaterStatus } from '../shared/types/updater'
 
 const api = {
   openExternal: (url: string): Promise<boolean> =>
     ipcRenderer.invoke(IPC_CHANNELS.APP_OPEN_EXTERNAL, url),
+  updater: {
+    installNow: (): Promise<void> => ipcRenderer.invoke(IPC_CHANNELS.UPDATER_INSTALL_NOW),
+    onStatus: (callback: (status: UpdaterStatus) => void): (() => void) => {
+      const handler = (_event: Electron.IpcRendererEvent, status: UpdaterStatus): void =>
+        callback(status)
+      ipcRenderer.on(IPC_CHANNELS.UPDATER_STATUS, handler)
+      return () => ipcRenderer.removeListener(IPC_CHANNELS.UPDATER_STATUS, handler)
+    }
+  },
   activation: {
     isActivated: (): Promise<boolean> => ipcRenderer.invoke(IPC_CHANNELS.ACTIVATION_IS_ACTIVATED),
     activate: (licenseKey: string): Promise<ActivationStatus> =>

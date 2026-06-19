@@ -12,6 +12,10 @@ export const IPC_CHANNELS = {
   // ── App ───────────────────────────────
   APP_OPEN_EXTERNAL: 'app:open-external',
 
+  // ── Updater ───────────────────────────
+  UPDATER_STATUS: 'updater:status',
+  UPDATER_INSTALL_NOW: 'updater:install-now',
+
   // ── Activation ────────────────────────
   ACTIVATION_IS_ACTIVATED: 'activation:is-activated',
   ACTIVATION_ACTIVATE: 'activation:activate',

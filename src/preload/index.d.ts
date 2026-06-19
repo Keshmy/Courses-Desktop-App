@@ -65,9 +65,14 @@ import type {
   LicenseStatusResponse,
   LicenseSyncResult
 } from '../shared/types/license'
+import type { UpdaterStatus } from '../shared/types/updater'
 
 export interface AppPreloadApi {
   openExternal: (url: string) => Promise<boolean>
+  updater: {
+    installNow: () => Promise<void>
+    onStatus: (callback: (status: UpdaterStatus) => void) => () => void
+  }
   activation: {
     isActivated: () => Promise<boolean>
     activate: (licenseKey: string) => Promise<ActivationStatus>

@@ -18,7 +18,11 @@ let licenseCheckInterval: NodeJS.Timeout | null = null
 let isLicenseCheckRunning = false
 
 function isLicenseExemptChannel(channel: string): boolean {
-  return channel.startsWith('activation:') || channel === IPC_CHANNELS.APP_OPEN_EXTERNAL
+  return (
+    channel.startsWith('activation:') ||
+    channel.startsWith('updater:') ||
+    channel === IPC_CHANNELS.APP_OPEN_EXTERNAL
+  )
 }
 
 export function installLicenseGuard(): void {
@@ -60,7 +64,10 @@ function notifyLicenseUpdated(
   }
 }
 
-async function runLicenseCheck(window: BrowserWindow, trigger: 'startup' | 'interval') {
+async function runLicenseCheck(
+  window: BrowserWindow,
+  trigger: 'startup' | 'interval'
+): Promise<void> {
   if (isLicenseCheckRunning || window.isDestroyed()) return
 
   isLicenseCheckRunning = true
@@ -68,7 +75,10 @@ async function runLicenseCheck(window: BrowserWindow, trigger: 'startup' | 'inte
     const syncResult = await activationService.syncLicense()
     if (syncResult?.kind === 'inactive') {
       notifyLicenseInvalid(window, syncResult.reason)
-      activationService.logLicenseEvent('main-check-inactive', { trigger, reason: syncResult.reason })
+      activationService.logLicenseEvent('main-check-inactive', {
+        trigger,
+        reason: syncResult.reason
+      })
       return
     }
 
