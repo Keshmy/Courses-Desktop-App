@@ -8,6 +8,7 @@ import { join } from 'node:path'
 import { promisify } from 'node:util'
 import { LICENSE_SERVER_BASE_URL, LICENSE_SYSTEM_SLUG } from '../../../shared/license'
 import type { ActivationStatus, LicenseData } from '../../../shared/types/license'
+import { apiFetch } from '../../lib/api-fetch'
 
 const execFileAsync = promisify(execFile)
 
@@ -353,7 +354,7 @@ export const activationService = {
   > {
     try {
       const hwid = await this.getMachineId()
-      const response = await fetch(
+      const response = await apiFetch(
         `${LICENSE_SERVER_BASE_URL}/api/license/check-status/${encodeURIComponent(hwid)}/${LICENSE_SYSTEM_SLUG}`
       )
 
@@ -363,9 +364,7 @@ export const activationService = {
       if (data.status && data.status !== 'ACTIVE') {
         const serverLock = this.getServerLockState()
         const hasHardServerLock = Boolean(
-          serverLock.locked &&
-            serverLock.reason &&
-            HARD_SERVER_LOCK_REASONS.has(serverLock.reason)
+          serverLock.locked && serverLock.reason && HARD_SERVER_LOCK_REASONS.has(serverLock.reason)
         )
 
         this.logLicenseEvent('server-status', {
@@ -408,7 +407,7 @@ export const activationService = {
   async reset(): Promise<boolean> {
     try {
       const hwid = await this.getMachineId()
-      fetch(
+      apiFetch(
         `${LICENSE_SERVER_BASE_URL}/api/license/admin/reset/${encodeURIComponent(hwid)}/${LICENSE_SYSTEM_SLUG}`,
         {
           method: 'POST'

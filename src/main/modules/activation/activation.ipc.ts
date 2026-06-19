@@ -11,6 +11,7 @@ import type {
   LicenseRenewResult,
   LicenseStatusResponse
 } from '../../../shared/types/license'
+import { apiFetch } from '../../lib/api-fetch'
 import { activationService } from './activation.service'
 
 let guardInstalled = false
@@ -168,7 +169,7 @@ export function registerActivationIpcHandlers(): void {
   })
 
   ipcMain.handle(IPC_CHANNELS.ACTIVATION_LIST_PLANS, async (): Promise<LicensePlan[]> => {
-    const response = await fetch(
+    const response = await apiFetch(
       `${LICENSE_SERVER_BASE_URL}/api/plans/active?system=${LICENSE_SYSTEM_SLUG}`
     )
     if (!response.ok) {
@@ -183,7 +184,7 @@ export function registerActivationIpcHandlers(): void {
     IPC_CHANNELS.ACTIVATION_CHECK_SERVER_STATUS,
     async (_event, hwid?: string): Promise<LicenseStatusResponse> => {
       const machineId = hwid || (await activationService.getMachineId())
-      const response = await fetch(
+      const response = await apiFetch(
         `${LICENSE_SERVER_BASE_URL}/api/license/check-status/${encodeURIComponent(machineId)}/${LICENSE_SYSTEM_SLUG}`
       )
       if (!response.ok) {
@@ -200,7 +201,7 @@ export function registerActivationIpcHandlers(): void {
       _event,
       request: { name: string; phone: string; planId: string; hwid: string }
     ): Promise<LicenseRenewResult> => {
-      const response = await fetch(`${LICENSE_SERVER_BASE_URL}/api/license/request-access`, {
+      const response = await apiFetch(`${LICENSE_SERVER_BASE_URL}/api/license/request-access`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -230,7 +231,7 @@ export function registerActivationIpcHandlers(): void {
       hwid: string,
       planId: string
     ): Promise<LicenseRenewResult> => {
-      const response = await fetch(`${LICENSE_SERVER_BASE_URL}/api/license/renew`, {
+      const response = await apiFetch(`${LICENSE_SERVER_BASE_URL}/api/license/renew`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ customerId, hwid, planId, systemSlug: LICENSE_SYSTEM_SLUG })
@@ -245,7 +246,7 @@ export function registerActivationIpcHandlers(): void {
     async (_event, subscriptionId: string): Promise<boolean> => {
       if (!subscriptionId) return false
 
-      const response = await fetch(
+      const response = await apiFetch(
         `${LICENSE_SERVER_BASE_URL}/api/payments/mypay/cancel/${encodeURIComponent(subscriptionId)}?type=app_cancel`
       )
 
