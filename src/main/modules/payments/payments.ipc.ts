@@ -4,11 +4,14 @@ import type {
   PaymentDto,
   PaymentListFilters,
   PaymentListResult,
+  OutstandingDto,
+  OutstandingListFilters,
+  OutstandingListResult,
   CreatePaymentRequest,
   ReceiptData
 } from '../../../shared/types/payment'
 import { audit } from '../../lib/audit'
-import { readLogoAsDataUrl } from '../../lib/logo'
+import { getLogoDataUrlOrDefault } from '../../lib/logo'
 import * as repo from './payment.repository'
 
 /**
@@ -41,7 +44,7 @@ function toReceiptData(row: repo.ReceiptRow): ReceiptData {
     receiptNumber: row.receiptNumber,
     centerName: row.centerName,
     centerLogoPath: row.centerLogoPath,
-    centerLogoDataUrl: readLogoAsDataUrl(row.centerLogoPath),
+    centerLogoDataUrl: getLogoDataUrlOrDefault(row.centerLogoPath),
     studentName: row.studentName,
     subjectName: row.subjectName,
     groupName: row.groupName,
@@ -116,6 +119,27 @@ export function registerPaymentsIpcHandlers(): void {
     async (_event, filters?: PaymentListFilters): Promise<PaymentListResult> => {
       const { items, total } = await repo.listAll(filters)
       return { items: items.map(toDto), total }
+    }
+  )
+
+  // ── List students with outstanding balances ───────────────────
+  ipcMain.handle(
+    IPC_CHANNELS.PAYMENTS_LIST_OUTSTANDING,
+    async (_event, filters?: OutstandingListFilters): Promise<OutstandingListResult> => {
+      const { items, total, totalRemaining } = await repo.listOutstanding(filters)
+      const dtos: OutstandingDto[] = items.map((row) => ({
+        enrollmentId: row.enrollmentId,
+        studentId: row.studentId,
+        studentName: row.studentName,
+        studentPhone: row.studentPhone,
+        subjectName: row.subjectName,
+        groupName: row.groupName,
+        totalAmount: row.totalAmount,
+        paidAmount: row.paidAmount,
+        remainingAmount: row.remainingAmount,
+        enrolledAt: row.enrolledAt
+      }))
+      return { items: dtos, total, totalRemaining }
     }
   )
 

@@ -12,6 +12,8 @@ import { NavIcon } from '@/lib/nav-icons'
 
 import { Button } from '@/components/ui/button'
 
+import { HeaderClock } from '@/components/HeaderClock'
+
 import { cn } from '@/lib/utils'
 
 
@@ -172,9 +174,11 @@ export function AppShell(): React.JSX.Element {
 
       <main className="flex flex-1 flex-col overflow-hidden">
 
-        <header className="flex h-16 shrink-0 items-center border-b border-border/60 bg-white/90 px-6 shadow-sm backdrop-blur-md">
+        <header className="flex h-16 shrink-0 items-center justify-between border-b border-border/60 bg-white/90 px-6 shadow-sm backdrop-blur-md">
 
           <h1 className="text-lg font-bold tracking-tight text-foreground">نظام إدارة المركز</h1>
+
+          <HeaderClock />
 
         </header>
 

@@ -9,7 +9,7 @@ import type {
   RecentPaymentDto
 } from '../../../shared/types/settings'
 import { audit } from '../../lib/audit'
-import { readLogoAsDataUrl } from '../../lib/logo'
+import { getLogoDataUrlOrDefault } from '../../lib/logo'
 import * as repo from './settings.repository'
 
 // ── Row → DTO mappers ───────────────────────────────────────────
@@ -47,7 +47,7 @@ export function registerSettingsIpcHandlers(): void {
 
   ipcMain.handle(IPC_CHANNELS.SETTINGS_GET_LOGO, async (): Promise<string | null> => {
     const row = await repo.getSettings()
-    return readLogoAsDataUrl(row.centerLogoPath)
+    return getLogoDataUrlOrDefault(row.centerLogoPath)
   })
 
   ipcMain.handle(

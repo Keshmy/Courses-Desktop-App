@@ -265,6 +265,91 @@ export async function listAll(
   return { items, total }
 }
 
+export type OutstandingFilters = {
+  limit?: number
+  offset?: number
+  query?: string
+}
+
+export type OutstandingRow = {
+  enrollmentId: number
+  studentId: number
+  studentName: string
+  studentPhone: string | null
+  subjectName: string
+  groupName: string
+  totalAmount: number
+  paidAmount: number
+  remainingAmount: number
+  enrolledAt: string
+}
+
+// ── List active enrollments that still have a remaining balance ──
+export async function listOutstanding(
+  filters: OutstandingFilters = {}
+): Promise<{ items: OutstandingRow[]; total: number; totalRemaining: number }> {
+  const db = getDb()
+  const limit = filters.limit ?? 50
+  const offset = filters.offset ?? 0
+
+  const conditions: SQL[] = [
+    eq(enrollmentsTable.status, 'active'),
+    sql`${enrollmentsTable.paidAmount} < ${enrollmentsTable.totalAmount}`
+  ]
+
+  const q = filters.query?.trim()
+  if (q) {
+    const pattern = `%${q}%`
+    const nameOrPhone = or(like(studentsTable.fullName, pattern), like(studentsTable.phone, pattern))
+    if (nameOrPhone) conditions.push(nameOrPhone)
+  }
+
+  const whereClause = and(...conditions)
+  const remaining = sql<number>`${enrollmentsTable.totalAmount} - ${enrollmentsTable.paidAmount}`
+
+  const summaryRows = await db
+    .select({
+      total: count(enrollmentsTable.id),
+      totalRemaining: sql<number>`coalesce(sum(${remaining}), 0)`
+    })
+    .from(enrollmentsTable)
+    .innerJoin(studentsTable, eq(enrollmentsTable.studentId, studentsTable.id))
+    .innerJoin(groupsTable, eq(enrollmentsTable.groupId, groupsTable.id))
+    .innerJoin(subjectsTable, eq(groupsTable.subjectId, subjectsTable.id))
+    .where(whereClause)
+
+  const total = Number(summaryRows[0]?.total ?? 0)
+  const totalRemaining = Number(summaryRows[0]?.totalRemaining ?? 0)
+
+  const items = await db
+    .select({
+      enrollmentId: enrollmentsTable.id,
+      studentId: enrollmentsTable.studentId,
+      studentName: studentsTable.fullName,
+      studentPhone: studentsTable.phone,
+      subjectName: subjectsTable.name,
+      groupName: groupsTable.name,
+      totalAmount: enrollmentsTable.totalAmount,
+      paidAmount: enrollmentsTable.paidAmount,
+      remainingAmount: remaining,
+      enrolledAt: enrollmentsTable.enrolledAt
+    })
+    .from(enrollmentsTable)
+    .innerJoin(studentsTable, eq(enrollmentsTable.studentId, studentsTable.id))
+    .innerJoin(groupsTable, eq(enrollmentsTable.groupId, groupsTable.id))
+    .innerJoin(subjectsTable, eq(groupsTable.subjectId, subjectsTable.id))
+    .where(whereClause)
+    .orderBy(desc(remaining))
+    .limit(limit)
+    .offset(offset)
+
+  return {
+    items: items.map((row) => ({ ...row, remainingAmount: Number(row.remainingAmount) })),
+    total,
+    totalRemaining
+  }
+}
+
 // ── Get full receipt data ───────────────────────────────────────
 export async function getReceipt(paymentId: number): Promise<ReceiptRow | null> {
   const db = getDb()

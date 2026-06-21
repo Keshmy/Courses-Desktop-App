@@ -84,6 +84,7 @@ export const IPC_CHANNELS = {
   PAYMENTS_LIST_BY_ENROLLMENT: 'payments:list-by-enrollment',
   PAYMENTS_LIST_BY_STUDENT: 'payments:list-by-student',
   PAYMENTS_LIST_ALL: 'payments:list-all',
+  PAYMENTS_LIST_OUTSTANDING: 'payments:list-outstanding',
   PAYMENTS_GET_RECEIPT: 'payments:get-receipt',
 
   // ── Finances ──────────────────────────

@@ -46,6 +46,8 @@ import type {
   PaymentDto,
   PaymentListFilters,
   PaymentListResult,
+  OutstandingListFilters,
+  OutstandingListResult,
   CreatePaymentRequest,
   ChangeEnrollmentGroupRequest,
   ReceiptData
@@ -233,6 +235,8 @@ const api = {
       ipcRenderer.invoke(IPC_CHANNELS.PAYMENTS_LIST_BY_STUDENT, studentId),
     listAll: (filters?: PaymentListFilters): Promise<PaymentListResult> =>
       ipcRenderer.invoke(IPC_CHANNELS.PAYMENTS_LIST_ALL, filters),
+    listOutstanding: (filters?: OutstandingListFilters): Promise<OutstandingListResult> =>
+      ipcRenderer.invoke(IPC_CHANNELS.PAYMENTS_LIST_OUTSTANDING, filters),
     getReceipt: (paymentId: number): Promise<ReceiptData | null> =>
       ipcRenderer.invoke(IPC_CHANNELS.PAYMENTS_GET_RECEIPT, paymentId)
   },

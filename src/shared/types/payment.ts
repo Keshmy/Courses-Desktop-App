@@ -43,6 +43,39 @@ export type PaymentListResult = {
   total: number
 }
 
+/**
+ * Filters for listing students with outstanding (unpaid) balances.
+ */
+export type OutstandingListFilters = {
+  limit?: number
+  offset?: number
+  /** Student name or phone */
+  query?: string
+}
+
+/**
+ * An active enrollment that still has a remaining balance to be paid.
+ */
+export type OutstandingDto = {
+  enrollmentId: number
+  studentId: number
+  studentName: string
+  studentPhone: string | null
+  subjectName: string
+  groupName: string
+  totalAmount: number
+  paidAmount: number
+  remainingAmount: number
+  enrolledAt: string
+}
+
+export type OutstandingListResult = {
+  items: OutstandingDto[]
+  total: number
+  /** Sum of all remaining balances across every matching enrollment. */
+  totalRemaining: number
+}
+
 export type PaymentDto = {
   id: number
   enrollmentId: number

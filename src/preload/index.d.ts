@@ -37,6 +37,8 @@ import type {
   PaymentDto,
   PaymentListFilters,
   PaymentListResult,
+  OutstandingListFilters,
+  OutstandingListResult,
   CreatePaymentRequest,
   ChangeEnrollmentGroupRequest,
   ReceiptData
@@ -163,6 +165,7 @@ export interface AppPreloadApi {
     listByEnrollment: (enrollmentId: number) => Promise<PaymentDto[]>
     listByStudent: (studentId: number) => Promise<PaymentDto[]>
     listAll: (filters?: PaymentListFilters) => Promise<PaymentListResult>
+    listOutstanding: (filters?: OutstandingListFilters) => Promise<OutstandingListResult>
     getReceipt: (paymentId: number) => Promise<ReceiptData | null>
   }
   finances: {
