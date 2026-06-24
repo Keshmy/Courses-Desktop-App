@@ -4,7 +4,7 @@ import { join } from 'path'
 import { electronApp, optimizer, is } from '@electron-toolkit/utils'
 import icon from '../../resources/icon.png?asset'
 import { initializeDatabase } from './db/db'
-import { runBootstrapMigrations } from './db/bootstrap-migrations'
+import { runApplicationMigrations } from './db/application-migrations'
 import { resolveDatabaseUrl } from './db/database-url'
 import { registerIpcHandlers, startPeriodicLicenseCheck } from './ipc/register-ipc'
 import { setupAutoBackupOnQuit } from './lib/auto-backup'
@@ -66,7 +66,7 @@ app.whenReady().then(async () => {
 
   // Local DB (Drizzle + libSQL). Uses DB_FILE_NAME from .env when set.
   initializeDatabase(resolveDatabaseUrl())
-  await runBootstrapMigrations()
+  await runApplicationMigrations()
   registerIpcHandlers()
   setupAutoBackupOnQuit()
 

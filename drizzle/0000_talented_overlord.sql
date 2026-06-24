@@ -1,4 +1,4 @@
-CREATE TABLE `backups` (
+CREATE TABLE IF NOT EXISTS `backups` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`file_path` text NOT NULL,
 	`created_by` integer,
@@ -6,7 +6,7 @@ CREATE TABLE `backups` (
 	FOREIGN KEY (`created_by`) REFERENCES `employees`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
-CREATE TABLE `employee_salaries` (
+CREATE TABLE IF NOT EXISTS `employee_salaries` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`employee_id` integer NOT NULL,
 	`amount` real NOT NULL,
@@ -18,7 +18,7 @@ CREATE TABLE `employee_salaries` (
 	FOREIGN KEY (`paid_by`) REFERENCES `employees`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
-CREATE TABLE `employees` (
+CREATE TABLE IF NOT EXISTS `employees` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`full_name` text NOT NULL,
 	`username` text NOT NULL,
@@ -28,8 +28,8 @@ CREATE TABLE `employees` (
 	`created_at` text DEFAULT (datetime('now','localtime')) NOT NULL
 );
 --> statement-breakpoint
-CREATE UNIQUE INDEX `employees_username_unique` ON `employees` (`username`);--> statement-breakpoint
-CREATE TABLE `enrollments` (
+CREATE UNIQUE INDEX IF NOT EXISTS `employees_username_unique` ON `employees` (`username`);--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS `enrollments` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`student_id` integer NOT NULL,
 	`group_id` integer NOT NULL,
@@ -41,7 +41,7 @@ CREATE TABLE `enrollments` (
 	FOREIGN KEY (`group_id`) REFERENCES `groups`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
-CREATE TABLE `finance_entries` (
+CREATE TABLE IF NOT EXISTS `finance_entries` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`type` text NOT NULL,
 	`category` text NOT NULL,
@@ -54,7 +54,7 @@ CREATE TABLE `finance_entries` (
 	FOREIGN KEY (`created_by`) REFERENCES `employees`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
-CREATE TABLE `group_schedule` (
+CREATE TABLE IF NOT EXISTS `group_schedule` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`group_id` integer NOT NULL,
 	`day_of_week` text NOT NULL,
@@ -63,7 +63,7 @@ CREATE TABLE `group_schedule` (
 	FOREIGN KEY (`group_id`) REFERENCES `groups`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
-CREATE TABLE `groups` (
+CREATE TABLE IF NOT EXISTS `groups` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`name` text NOT NULL,
 	`subject_id` integer NOT NULL,
@@ -75,7 +75,7 @@ CREATE TABLE `groups` (
 	FOREIGN KEY (`teacher_id`) REFERENCES `teachers`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
-CREATE TABLE `payments` (
+CREATE TABLE IF NOT EXISTS `payments` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`enrollment_id` integer NOT NULL,
 	`amount` real NOT NULL,
@@ -90,14 +90,14 @@ CREATE TABLE `payments` (
 	FOREIGN KEY (`paid_by`) REFERENCES `employees`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
-CREATE UNIQUE INDEX `payments_receipt_number_unique` ON `payments` (`receipt_number`);--> statement-breakpoint
-CREATE TABLE `settings` (
+CREATE UNIQUE INDEX IF NOT EXISTS `payments_receipt_number_unique` ON `payments` (`receipt_number`);--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS `settings` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`center_name` text DEFAULT 'مركز التعليم' NOT NULL,
 	`center_logo_path` text
 );
 --> statement-breakpoint
-CREATE TABLE `students` (
+CREATE TABLE IF NOT EXISTS `students` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`full_name` text NOT NULL,
 	`phone` text,
@@ -108,7 +108,7 @@ CREATE TABLE `students` (
 	`created_at` text DEFAULT (datetime('now','localtime')) NOT NULL
 );
 --> statement-breakpoint
-CREATE TABLE `subjects` (
+CREATE TABLE IF NOT EXISTS `subjects` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`name` text NOT NULL,
 	`description` text,
@@ -117,8 +117,8 @@ CREATE TABLE `subjects` (
 	`created_at` text DEFAULT (datetime('now','localtime')) NOT NULL
 );
 --> statement-breakpoint
-CREATE UNIQUE INDEX `subjects_name_unique` ON `subjects` (`name`);--> statement-breakpoint
-CREATE TABLE `teacher_salaries` (
+CREATE UNIQUE INDEX IF NOT EXISTS `subjects_name_unique` ON `subjects` (`name`);--> statement-breakpoint
+CREATE TABLE IF NOT EXISTS `teacher_salaries` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`teacher_id` integer NOT NULL,
 	`amount` real NOT NULL,
@@ -130,7 +130,7 @@ CREATE TABLE `teacher_salaries` (
 	FOREIGN KEY (`paid_by`) REFERENCES `employees`(`id`) ON UPDATE no action ON DELETE no action
 );
 --> statement-breakpoint
-CREATE TABLE `teachers` (
+CREATE TABLE IF NOT EXISTS `teachers` (
 	`id` integer PRIMARY KEY AUTOINCREMENT NOT NULL,
 	`full_name` text NOT NULL,
 	`phone` text,

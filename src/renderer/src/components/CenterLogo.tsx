@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { GraduationCap, ImageOff } from 'lucide-react'
 import { useQuery } from '@tanstack/react-query'
 import { cn } from '@/lib/utils'
@@ -16,7 +16,7 @@ export function CenterLogo({
   fallbackClassName,
   showFallback = false
 }: Props): React.JSX.Element | null {
-  const [loadFailed, setLoadFailed] = useState(false)
+  const [failedSrc, setFailedSrc] = useState<string | null>(null)
 
   const { data: src, isLoading } = useQuery({
     queryKey: ['center-logo'],
@@ -24,35 +24,26 @@ export function CenterLogo({
     staleTime: 5 * 60 * 1000
   })
 
-  useEffect(() => {
-    setLoadFailed(false)
-  }, [src])
-
   if (isLoading && showFallback) {
     return (
       <div
         className={cn(
-          'flex animate-pulse items-center justify-center rounded-xl bg-muted/60',
+          'flex items-center justify-center rounded-xl border border-primary/15 bg-primary/5 text-primary',
           fallbackClassName ?? className
         )}
-      />
+      >
+        <GraduationCap className="size-12 animate-pulse" />
+      </div>
     )
   }
 
-  if (src && !loadFailed) {
-    return (
-      <img
-        src={src}
-        alt={alt}
-        className={className}
-        onError={() => setLoadFailed(true)}
-      />
-    )
+  if (src && failedSrc !== src) {
+    return <img src={src} alt={alt} className={className} onError={() => setFailedSrc(src)} />
   }
 
   if (!showFallback) return null
 
-  if (loadFailed) {
+  if (src && failedSrc === src) {
     return (
       <div
         className={cn(
