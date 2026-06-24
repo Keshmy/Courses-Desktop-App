@@ -1,6 +1,6 @@
 {
   "name": "courses-desktop-app",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "description": "Desktop courses management app",
   "main": "./out/main/index.js",
   "author": "Keshmy",
